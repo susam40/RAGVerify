@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -14,17 +14,11 @@ class Settings(BaseSettings):
     app_env: str = "development"
     log_level: str = "INFO"
 
-    database_url: str = "postgresql+asyncpg://ragproof:ragproof@postgres:5432/ragproof"
-    opensearch_url: str = "http://opensearch:9200"
-    opensearch_index: str = "rag_documents"
-    redis_url: str = "redis://redis:6379/0"
-    rabbitmq_url: str = "amqp://ragproof:ragproof@rabbitmq:5672/"
-
-    nvidia_api_key: str = ""
-    nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
-    embedding_model: str = "baai/bge-m3"
-    embedding_dim: int = 1024
-    llm_model: str = "nvidia/nemotron-3-super-120b-a12b"
+    fetch_timeout_seconds: float = 20.0
+    fetch_connect_timeout_seconds: float = 10.0
+    fetch_max_bytes: int = 5_000_000
+    fetch_max_retries: int = 2
+    fetch_ssl_verify: bool = True
 
 
 @lru_cache

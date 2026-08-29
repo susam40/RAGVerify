@@ -4,4 +4,7 @@ pydantic-settings==2.10.1
 sqlalchemy[asyncio]==2.0.43
 asyncpg==0.30.0
 httpx==0.28.1
+certifi==2026.7.22
 structlog==25.4.0
+beautifulsoup4==4.13.4
+lxml==6.0.0

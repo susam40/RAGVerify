@@ -1,95 +1,23 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ragproof
-      POSTGRES_PASSWORD: ragproof
-      POSTGRES_DB: ragproof
-    ports:
-      - "5432:5432"
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ragproof -d ragproof"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  redis:
-    image: redis:7-alpine
+      - ./backend/app:/app/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     ports:
-      - "6379:6379"
+      - "8000:8000"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
       interval: 5s
       timeout: 3s
       retries: 10
-
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER: ragproof
-      RABBITMQ_DEFAULT_PASS: ragproof
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  opensearch:
-    image: opensearchproject/opensearch:2.17.1
-    environment:
-      - discovery.type=single-node
-      - DISABLE_SECURITY_PLUGIN=true
-      - DISABLE_INSTALL_DEMO_CONFIG=true
-      - cluster.name=ragproof
-      - node.name=ragproof-node
-      - bootstrap.memory_lock=true
-      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    ports:
-      - "9200:9200"
-    volumes:
-      - opensearch-data:/usr/share/opensearch/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:9200 >/dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-
-  backend:
-    build:
-      context: ./backend
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://ragproof:ragproof@postgres:5432/ragproof
-      OPENSEARCH_URL: http://opensearch:9200
-      REDIS_URL: redis://redis:6379/0
-      RABBITMQ_URL: amqp://ragproof:ragproof@rabbitmq:5672/
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./infrastructure/opensearch:/app/infrastructure/opensearch:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
-      opensearch:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-
-volumes:
-  postgres-data:
-  opensearch-data:
