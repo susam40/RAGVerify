@@ -1,0 +1,56 @@
+{
+  "settings": {
+    "index": {
+      "knn": true,
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "analysis": {
+      "filter": {
+        "turkish_stop": {
+          "type": "stop",
+          "stopwords": "_turkish_"
+        },
+        "turkish_stemmer": {
+          "type": "stemmer",
+          "language": "turkish"
+        }
+      },
+      "analyzer": {
+        "turkish_custom": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "turkish_stop", "turkish_stemmer"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "document_id": { "type": "keyword" },
+      "chunk_id": { "type": "keyword" },
+      "source_url": { "type": "keyword" },
+      "title": {
+        "type": "text",
+        "analyzer": "turkish_custom",
+        "fields": { "raw": { "type": "keyword" } }
+      },
+      "document_type": { "type": "keyword" },
+      "law_number": { "type": "integer" },
+      "article_number": { "type": "integer" },
+      "chapter": { "type": "keyword" },
+      "chunk_index": { "type": "integer" },
+      "part_index": { "type": "integer" },
+      "content": { "type": "text", "analyzer": "turkish_custom" },
+      "embedding": {
+        "type": "knn_vector",
+        "dimension": 1024,
+        "method": {
+          "name": "hnsw",
+          "space_type": "cosinesimil",
+          "engine": "lucene"
+        }
+      }
+    }
+  }
+}
